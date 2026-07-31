@@ -205,7 +205,7 @@ fun OnbRadioRow(label: String, selected: Boolean, onClick: () -> Unit) {
 fun OnbOptionalHint() {
     val colors = incColors()
     Text(
-        "Optional — skip if you're not sure.",
+        "Optional: skip if you're not sure.",
         style = IncType.secondary.copy(fontSize = 12.sp),
         color = colors.textMute,
         modifier = Modifier.padding(horizontal = 22.dp),

@@ -76,7 +76,7 @@ fun IncomaticShell(viewModel: CalculatorViewModel, equityViewModel: EquityViewMo
             )
             MainTab.History -> PlaceholderScreen(
                 title = "History",
-                tagline = "Signed-out CTA → empty → list → detail — lands in Phase 4, once /v1/auth/google exists.",
+                tagline = "Signed-out CTA → empty → list → detail. Lands in Phase 4, once /v1/auth/google exists.",
                 onCompactChange = { compact = it },
             )
         }
