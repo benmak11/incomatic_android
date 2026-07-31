@@ -16,6 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.makusha.incomatic.calculator.CalculatorViewModel
 import com.makusha.incomatic.data.OnboardingPrefs
 import com.makusha.incomatic.design.incColors
+import com.makusha.incomatic.equity.EquityViewModel
 import com.makusha.incomatic.nav.MainTab
 import com.makusha.incomatic.onboarding.OnboardingFlow
 import kotlinx.coroutines.flow.map
@@ -38,11 +39,13 @@ fun AppRoot() {
     var startTab by remember { mutableStateOf(MainTab.Calculator) }
 
     val viewModel: CalculatorViewModel = viewModel()
+    val equityViewModel: EquityViewModel = viewModel()
     val colors = incColors()
 
     when {
         hasCompletedOnboarding == null -> Box(modifier = Modifier.fillMaxSize().background(colors.bg)) {}
-        forceShell || hasCompletedOnboarding == true -> IncomaticShell(viewModel = viewModel, startTab = startTab)
+        forceShell || hasCompletedOnboarding == true ->
+            IncomaticShell(viewModel = viewModel, equityViewModel = equityViewModel, startTab = startTab)
         else -> OnboardingFlow(
             viewModel = viewModel,
             onComplete = {

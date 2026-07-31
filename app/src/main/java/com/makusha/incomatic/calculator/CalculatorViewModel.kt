@@ -54,11 +54,11 @@ class CalculatorViewModel : ViewModel() {
         _uiState.update { it.copy(section = section) }
     }
 
-    fun calculate(onDone: () -> Unit = {}) {
+    fun calculate(grantsRsuValue: Double = 0.0, onDone: () -> Unit = {}) {
         val form = _uiState.value.form
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
         viewModelScope.launch {
-            runCatching { api.calculate(form.toCalculateRequest()) }
+            runCatching { api.calculate(form.toCalculateRequest(grantsRsuValue)) }
                 .onSuccess { response ->
                     _uiState.update { it.copy(result = response, isLoading = false) }
                     onDone()

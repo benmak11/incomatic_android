@@ -26,6 +26,8 @@ import com.makusha.incomatic.calculator.CalculatorViewModel
 import com.makusha.incomatic.design.IncCard
 import com.makusha.incomatic.design.IncType
 import com.makusha.incomatic.design.incColors
+import com.makusha.incomatic.equity.EquityViewModel
+import com.makusha.incomatic.equity.GrantsDialog
 import com.makusha.incomatic.insights.InsightsScreen
 import com.makusha.incomatic.nav.AccountGlyph
 import com.makusha.incomatic.nav.AppPillNav
@@ -39,12 +41,15 @@ import kotlin.math.abs
  * stays a placeholder until auth exists (Phase 4). [viewModel] is hoisted
  * to [com.makusha.incomatic.shell.AppRoot] (Phase 3) so Onboarding and the
  * Shell share one instance; [startTab] lets Onboarding hand off straight
- * into Insights after a first calculation.
+ * into Insights after a first calculation. [equityViewModel] (Phase 5) is
+ * hoisted the same way — both Calculator's Equity card and Insights'
+ * Yearly Outlook need the same on-device grants.
  */
 @Composable
-fun IncomaticShell(viewModel: CalculatorViewModel, startTab: MainTab = MainTab.Calculator) {
+fun IncomaticShell(viewModel: CalculatorViewModel, equityViewModel: EquityViewModel, startTab: MainTab = MainTab.Calculator) {
     var tab by remember { mutableStateOf(startTab) }
     var compact by remember { mutableStateOf(false) }
+    var showGrantsDialog by remember { mutableStateOf(false) }
     val colors = incColors()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -56,13 +61,16 @@ fun IncomaticShell(viewModel: CalculatorViewModel, startTab: MainTab = MainTab.C
         when (tab) {
             MainTab.Calculator -> CalculatorTab(
                 uiState = uiState,
+                equity = equityViewModel,
                 onFormUpdate = viewModel::updateForm,
                 onSectionChange = viewModel::setSection,
-                onCalculate = { viewModel.calculate { tab = MainTab.Insights } },
+                onCalculate = { viewModel.calculate(equityViewModel.vestingThisYear) { tab = MainTab.Insights } },
                 onCompactChange = { compact = it },
+                onOpenGrants = { showGrantsDialog = true },
             )
             MainTab.Insights -> InsightsScreen(
                 uiState = uiState,
+                grants = equityViewModel.grants.collectAsStateWithLifecycle().value,
                 onOpenCalculator = { tab = MainTab.Calculator },
                 onCompactChange = { compact = it },
             )
@@ -86,6 +94,10 @@ fun IncomaticShell(viewModel: CalculatorViewModel, startTab: MainTab = MainTab.C
             onExpand = { compact = false },
             modifier = Modifier.align(Alignment.BottomCenter),
         )
+    }
+
+    if (showGrantsDialog) {
+        GrantsDialog(equity = equityViewModel, onDismiss = { showGrantsDialog = false })
     }
 }
 

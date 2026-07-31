@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.makusha.incomatic.equity.EquityViewModel
 import com.makusha.incomatic.nav.AppSectionHeader
 import kotlin.math.abs
 
@@ -29,10 +30,12 @@ import kotlin.math.abs
 @Composable
 fun CalculatorTab(
     uiState: CalculatorUiState,
+    equity: EquityViewModel,
     onFormUpdate: ((CalculatorState) -> CalculatorState) -> Unit,
     onSectionChange: (CalculatorSection) -> Unit,
     onCalculate: () -> Unit,
     onCompactChange: (Boolean) -> Unit,
+    onOpenGrants: () -> Unit,
 ) {
     val scrollState = rememberScrollState()
     val density = LocalDensity.current
@@ -66,7 +69,7 @@ fun CalculatorTab(
                 onSelect = onSectionChange,
             )
             when (uiState.section) {
-                CalculatorSection.EARNINGS -> AndEarnings(uiState.form, onFormUpdate)
+                CalculatorSection.EARNINGS -> AndEarnings(uiState.form, onFormUpdate, equity, onOpenGrants)
                 CalculatorSection.FEDERAL -> AndFederal(uiState.form, onFormUpdate)
                 CalculatorSection.STATE -> AndState(uiState.form, uiState.usStates, onFormUpdate)
                 CalculatorSection.BENEFITS -> AndBenefits(uiState.form, onFormUpdate)

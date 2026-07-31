@@ -40,6 +40,7 @@ data class CalculatorState(
     val overtimeHours: String = "",
     val bonus: String = "",
     val bonusDate: String = "",
+    val bonusRecurring: Boolean = false,
     val commission: String = "",
     val filingStatus: FilingStatus = FilingStatus.SINGLE,
     val useOldW4: Boolean = false,

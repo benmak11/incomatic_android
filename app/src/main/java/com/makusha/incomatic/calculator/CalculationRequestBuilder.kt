@@ -19,8 +19,12 @@ import com.makusha.incomatic.net.dto.W4
  * benefits fields (medical/dental/vision/fsa) are entered per pay period in
  * the UI but the backend's Pretax DTO expects annual figures — multiply by
  * periodsPerYear, mirroring what the design's own mock estimator does.
+ *
+ * [grantsRsuValue] is the grant-derived RSU value vesting this tax year
+ * (from EquityViewModel.vestingThisYear); an explicit [rsuOverride] always
+ * wins over it, matching iOS's effectiveRsuAnnual.
  */
-fun CalculatorState.toCalculateRequest(): CalculateRequest {
+fun CalculatorState.toCalculateRequest(grantsRsuValue: Double = 0.0): CalculateRequest {
     val periods = payFrequency.cadence.periodsPerYear
 
     val earnings = Earnings(
@@ -36,8 +40,9 @@ fun CalculatorState.toCalculateRequest(): CalculateRequest {
         } else null,
         bonus = bonus.toDoubleOrNull() ?: 0.0,
         bonusDate = bonusDate.ifBlank { null },
+        bonusRecurring = bonusRecurring,
         commission = commission.toDoubleOrNull() ?: 0.0,
-        rsuVesting = rsuOverride.toDoubleOrNull() ?: 0.0,
+        rsuVesting = rsuOverride.toDoubleOrNull() ?: grantsRsuValue,
     )
 
     val pretax = Pretax(
