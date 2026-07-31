@@ -40,6 +40,7 @@ import com.makusha.incomatic.design.incColors
 import com.makusha.incomatic.net.dto.CalculateResponse
 import com.makusha.incomatic.net.dto.LineItem
 import com.makusha.incomatic.net.dto.LineItemCategory
+import com.makusha.incomatic.net.dto.RsuGrant
 import com.makusha.incomatic.nav.AppSectionHeader
 import com.makusha.incomatic.util.formatMoney
 import kotlin.math.abs
@@ -54,12 +55,13 @@ import kotlin.math.abs
 @Composable
 fun InsightsScreen(
     uiState: CalculatorUiState,
+    grants: List<RsuGrant>,
     onOpenCalculator: () -> Unit,
     onCompactChange: (Boolean) -> Unit,
 ) {
     when {
         uiState.isLoading -> InsightsLoading()
-        uiState.result != null -> InsightsResult(uiState.result, uiState.errorMessage, onCompactChange)
+        uiState.result != null -> InsightsResult(uiState.form, uiState.result, grants, uiState.errorMessage, onCompactChange)
         else -> InsightsEmpty(uiState.errorMessage, onOpenCalculator)
     }
 }
@@ -101,7 +103,13 @@ private fun InsightsEmpty(errorMessage: String?, onOpenCalculator: () -> Unit) {
 private val TAX_CATEGORIES = setOf(LineItemCategory.TAX_FEDERAL, LineItemCategory.TAX_FICA, LineItemCategory.TAX_STATE)
 
 @Composable
-private fun InsightsResult(result: CalculateResponse, errorMessage: String?, onCompactChange: (Boolean) -> Unit) {
+private fun InsightsResult(
+    form: com.makusha.incomatic.calculator.CalculatorState,
+    result: CalculateResponse,
+    grants: List<RsuGrant>,
+    errorMessage: String?,
+    onCompactChange: (Boolean) -> Unit,
+) {
     val colors = incColors()
     val scrollState = rememberScrollState()
     val density = LocalDensity.current
@@ -170,6 +178,7 @@ private fun InsightsResult(result: CalculateResponse, errorMessage: String?, onC
                 }
             }
         }
+        YearlyOutlook(form = form, result = result, grants = grants)
     }
 }
 

@@ -10,12 +10,20 @@ import com.makusha.incomatic.design.IncCardHeader
 import com.makusha.incomatic.design.IncMoneyField
 import com.makusha.incomatic.design.IncSegmented
 import com.makusha.incomatic.design.IncPicker
+import com.makusha.incomatic.design.IncSwitch
 import com.makusha.incomatic.design.IncTextField
 import com.makusha.incomatic.design.SegmentOption
 import com.makusha.incomatic.design.incColors
+import com.makusha.incomatic.equity.EquityCard
+import com.makusha.incomatic.equity.EquityViewModel
 
 @Composable
-fun AndEarnings(form: CalculatorState, update: ((CalculatorState) -> CalculatorState) -> Unit) {
+fun AndEarnings(
+    form: CalculatorState,
+    update: ((CalculatorState) -> CalculatorState) -> Unit,
+    equity: EquityViewModel,
+    onOpenGrants: () -> Unit,
+) {
     val colors = incColors()
     androidx.compose.foundation.layout.Column(modifier = Modifier.padding(horizontal = 16.dp)) {
         IncCard {
@@ -62,7 +70,14 @@ fun AndEarnings(form: CalculatorState, update: ((CalculatorState) -> CalculatorS
                 placeholder = "This year",
                 keyboardType = KeyboardType.Number,
             )
+            IncSwitch(
+                label = "Repeats yearly",
+                sub = "Same amount every year from the start date onward.",
+                checked = form.bonusRecurring,
+                onChange = { v -> update { it.copy(bonusRecurring = v) } },
+            )
             IncMoneyField(label = "Commission (annual)", value = form.commission, onChange = { v -> update { it.copy(commission = v) } })
         }
+        EquityCard(form = form, update = update, equity = equity, onOpenGrants = onOpenGrants)
     }
 }
