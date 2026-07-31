@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug-build-only exception: permits cleartext HTTP to the Android emulator's
+  loopback alias so USE_LOCAL_BACKEND can hit a locally-running
+  salary-calculator instance. Never merged into release builds — this file
+  lives under src/debug/, not src/main/.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
