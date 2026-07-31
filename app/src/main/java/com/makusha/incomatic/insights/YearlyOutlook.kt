@@ -199,7 +199,7 @@ private fun assumptionsCaption(baseAnnual: Double, hasBonus: Boolean, bonusRecur
     if (hasBonus) {
         clauses += if (bonusRecurring) "Bonus repeats every year at the same amount." else "Bonus shown once, in its payout year."
     }
-    if (hasRsu) clauses += "RSU value uses today's price for every future vest — actual value will differ."
+    if (hasRsu) clauses += "RSU value uses today's price for every future vest. Actual value will differ."
     clauses += "All figures gross, before taxes and deductions."
     return clauses.joinToString(" ")
 }

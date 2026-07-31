@@ -78,7 +78,7 @@ fun EquityCard(
             )
             if (override > 0) {
                 Text(
-                    "Using your override — clear it to value grants automatically.",
+                    "Using your override, clear it to value grants automatically.",
                     style = IncType.secondary.copy(fontSize = 12.sp),
                     color = colors.textDim,
                 )

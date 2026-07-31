@@ -76,9 +76,9 @@ fun OnboardingFlow(viewModel: CalculatorViewModel, onComplete: () -> Unit) {
                 Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
                     when (current) {
                         OnbStep.Greet -> {
-                            AndOnbBubble("Hi — let's find your real paycheck.")
+                            AndOnbBubble("Hi, let's find your real paycheck.")
                             Text(
-                                "A few quick questions and we'll build your take-home picture together — you can edit anything later.",
+                                "A few quick questions and we'll build your take-home picture together. You can edit anything later.",
                                 style = IncType.secondary,
                                 color = colors.textDim,
                                 modifier = Modifier.padding(horizontal = 26.dp),
@@ -173,7 +173,7 @@ fun OnboardingFlow(viewModel: CalculatorViewModel, onComplete: () -> Unit) {
                 text = when {
                     step == OnbStep.Greet -> "Get started"
                     step == OnbStep.Review && uiState.isLoading -> "Calculating…"
-                    step == OnbStep.Review -> "Looks right — calculate"
+                    step == OnbStep.Review -> "Looks right, calculate"
                     else -> "Continue"
                 },
                 onClick = {

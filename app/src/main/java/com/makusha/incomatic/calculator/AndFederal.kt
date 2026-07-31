@@ -49,7 +49,7 @@ fun AndFederal(form: CalculatorState, update: ((CalculatorState) -> CalculatorSt
             IncCardHeader(
                 icon = { CalcCardIcon(CalcIcon.SEED, colors.sage) },
                 title = "Adjustments",
-                subtitle = "Optional — W-4 steps 3 and 4.",
+                subtitle = "Optional: W-4 steps 3 and 4.",
             )
             IncMoneyField(label = "Dependent credits", value = form.dependents, onChange = { v -> update { it.copy(dependents = v) } })
             IncMoneyField(label = "Other income", value = form.otherIncome, onChange = { v -> update { it.copy(otherIncome = v) } })
