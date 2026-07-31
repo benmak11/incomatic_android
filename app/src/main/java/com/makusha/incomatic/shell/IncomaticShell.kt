@@ -20,9 +20,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.makusha.incomatic.calculator.CalculatorTab
+import com.makusha.incomatic.calculator.CalculatorViewModel
 import com.makusha.incomatic.design.IncCard
 import com.makusha.incomatic.design.IncType
 import com.makusha.incomatic.design.incColors
+import com.makusha.incomatic.insights.InsightsScreen
 import com.makusha.incomatic.nav.AccountGlyph
 import com.makusha.incomatic.nav.AppPillNav
 import com.makusha.incomatic.nav.AppSectionHeader
@@ -31,16 +36,16 @@ import kotlin.math.abs
 
 /**
  * Tabs are plain state, not a NavHost — matching iOS and the design doc's
- * explicit choice. Each tab's content is a placeholder for this pass (real
- * Calculator/Insights/History screens land in later phases); the point here
- * is proving the chrome (tokens, cards, pill nav, scroll-collapse, system
- * back) against the design-canvas screenshots.
+ * explicit choice. Calculator and Insights are real (Phase 2); History
+ * stays a placeholder until auth exists (Phase 4).
  */
 @Composable
 fun IncomaticShell() {
     var tab by remember { mutableStateOf(MainTab.Calculator) }
     var compact by remember { mutableStateOf(false) }
     val colors = incColors()
+    val viewModel: CalculatorViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     BackHandler(enabled = tab != MainTab.Calculator) {
         tab = MainTab.Calculator
@@ -48,14 +53,16 @@ fun IncomaticShell() {
 
     Box(modifier = Modifier.fillMaxSize().background(colors.bg)) {
         when (tab) {
-            MainTab.Calculator -> PlaceholderScreen(
-                title = "Calculator",
-                tagline = "Earnings · Federal · State · Benefits behind the hairline tabs — lands in Phase 2.",
+            MainTab.Calculator -> CalculatorTab(
+                uiState = uiState,
+                onFormUpdate = viewModel::updateForm,
+                onSectionChange = viewModel::setSection,
+                onCalculate = { viewModel.calculate { tab = MainTab.Insights } },
                 onCompactChange = { compact = it },
             )
-            MainTab.Insights -> PlaceholderScreen(
-                title = "Insights",
-                tagline = "Donut breakdown + yearly outlook — lands in Phase 2.",
+            MainTab.Insights -> InsightsScreen(
+                uiState = uiState,
+                onOpenCalculator = { tab = MainTab.Calculator },
                 onCompactChange = { compact = it },
             )
             MainTab.History -> PlaceholderScreen(
@@ -86,6 +93,7 @@ fun IncomaticShell() {
  * collapses the pill; scrolling up (or being back near the top) re-expands
  * it. Mirrors the design doc's `dy > 0 && scrollTop > 40` rule using
  * [rememberScrollState]'s absolute offset instead of a raw DOM scrollTop.
+ * Still used by the History tab, which remains a placeholder until Phase 4.
  */
 @Composable
 private fun PlaceholderScreen(title: String, tagline: String, onCompactChange: (Boolean) -> Unit) {
