@@ -18,6 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -163,13 +165,17 @@ fun OnbRetirementBody(form: CalculatorState, update: ((CalculatorState) -> Calcu
 @Composable
 fun OnbRadioRow(label: String, selected: Boolean, onClick: () -> Unit) {
     val colors = incColors()
+    val haptics = LocalHapticFeedback.current
     val shape: Shape = RoundedCornerShape(12.dp)
     IncSubtleRippleScope {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(shape)
-                .clickable(onClick = onClick)
+                .clickable {
+                    if (!selected) haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                    onClick()
+                }
                 .let { m -> if (selected) m.background(colors.sageBg) else m }
                 .padding(vertical = 13.dp, horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,

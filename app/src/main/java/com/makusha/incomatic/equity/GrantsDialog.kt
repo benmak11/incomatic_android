@@ -1,6 +1,5 @@
 package com.makusha.incomatic.equity
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +36,7 @@ import com.makusha.incomatic.design.IncButton
 import com.makusha.incomatic.design.IncSubtleRippleScope
 import com.makusha.incomatic.design.IncType
 import com.makusha.incomatic.design.incColors
+import com.makusha.incomatic.design.rememberPredictiveBackScale
 import com.makusha.incomatic.net.dto.RsuGrant
 import com.makusha.incomatic.util.formatMoney
 import com.makusha.incomatic.util.formatShares
@@ -53,7 +53,8 @@ private sealed class EquityScreen {
  * Fullscreen grants flow (List / Form / Detail) — the app has no NavHost
  * anywhere (see shell/IncomaticShell.kt's own doc comment), so this owns a
  * tiny local step state instead, same "plain state" philosophy as the shell
- * and onboarding. [BackHandler] pops one level instead of dismissing.
+ * and onboarding. The predictive-back gesture pops one level instead of
+ * dismissing.
  */
 @Composable
 fun GrantsDialog(equity: EquityViewModel, onDismiss: () -> Unit) {
@@ -62,14 +63,14 @@ fun GrantsDialog(equity: EquityViewModel, onDismiss: () -> Unit) {
     val colors = incColors()
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        BackHandler {
+        val backScale = rememberPredictiveBackScale {
             screen = when (val s = screen) {
                 is EquityScreen.List -> { onDismiss(); EquityScreen.List }
                 is EquityScreen.Form -> s.existing?.let { EquityScreen.Detail(it) } ?: EquityScreen.List
                 is EquityScreen.Detail -> EquityScreen.List
             }
         }
-        Column(modifier = Modifier.fillMaxSize().background(colors.bg)) {
+        Column(modifier = Modifier.fillMaxSize().background(colors.bg).then(backScale)) {
             when (val s = screen) {
                 is EquityScreen.List -> {
                     EquityTopBar(title = "RSU grants", leadingLabel = "Done", onLeading = onDismiss) {

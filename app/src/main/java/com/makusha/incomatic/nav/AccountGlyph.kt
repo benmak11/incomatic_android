@@ -14,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.makusha.incomatic.design.IncRippleScope
@@ -39,6 +41,7 @@ fun AccountGlyph(
                 .clip(CircleShape)
                 .background(if (signedIn) colors.sage else colors.surface)
                 .let { m -> if (signedIn) m else m.border(1.dp, colors.hairlineStrong, CircleShape) }
+                .semantics { contentDescription = if (signedIn) "Account, signed in as $initials" else "Account, signed out" }
                 .clickable(onClick = onClick),
             contentAlignment = Alignment.Center,
         ) {

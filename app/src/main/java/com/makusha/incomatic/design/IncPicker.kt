@@ -31,6 +31,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -48,6 +53,7 @@ fun <T> IncPicker(
     labelOf: (T) -> String = { it.toString() },
 ) {
     val colors = incColors()
+    val haptics = LocalHapticFeedback.current
     var open by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = 18.dp)) {
@@ -56,6 +62,7 @@ fun <T> IncPicker(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .semantics { role = Role.DropdownList }
                     .clickable { open = !open }
                     .padding(bottom = 8.dp)
                     .drawBehind {
@@ -102,7 +109,11 @@ fun <T> IncPicker(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { onChange(opt); open = false }
+                                    .clickable {
+                                        if (!sel) haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                                        onChange(opt)
+                                        open = false
+                                    }
                                     .let { m -> if (sel) m.background(colors.sageBg) else m }
                                     .padding(horizontal = 14.dp, vertical = 13.dp),
                                 horizontalArrangement = Arrangement.spacedBy(10.dp),
