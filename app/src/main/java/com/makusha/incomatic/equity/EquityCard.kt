@@ -20,6 +20,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -142,10 +144,13 @@ private fun VestingSummaryRow(equity: EquityViewModel, grants: List<com.makusha.
     }
 }
 
+/** Decorative — sits inside an already-clickable row whose own text is the accessible label. */
 @Composable
 private fun Chevron() {
     val colors = incColors()
-    androidx.compose.foundation.Canvas(modifier = Modifier.size(13.dp)) {
+    androidx.compose.foundation.Canvas(
+        modifier = Modifier.size(13.dp).semantics { hideFromAccessibility() },
+    ) {
         val w = size.width
         val h = size.height
         val p = androidx.compose.ui.graphics.Path().apply {

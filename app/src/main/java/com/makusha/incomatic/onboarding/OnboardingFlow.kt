@@ -1,6 +1,5 @@
 package com.makusha.incomatic.onboarding
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -31,6 +30,7 @@ import com.makusha.incomatic.design.IncButton
 import com.makusha.incomatic.design.IncButtonVariant
 import com.makusha.incomatic.design.IncType
 import com.makusha.incomatic.design.incColors
+import com.makusha.incomatic.design.rememberPredictiveBackScale
 
 /**
  * Guided Notebook onboarding — ported from android-onboarding.jsx's
@@ -60,9 +60,9 @@ fun OnboardingFlow(viewModel: CalculatorViewModel, onComplete: () -> Unit) {
         if (i >= 0) goTo(i)
     }
 
-    BackHandler(enabled = stepIndex > 0) { goTo(stepIndex - 1) }
+    val backScale = rememberPredictiveBackScale(enabled = stepIndex > 0) { goTo(stepIndex - 1) }
 
-    Column(modifier = Modifier.fillMaxSize().background(colors.bg)) {
+    Column(modifier = Modifier.fillMaxSize().background(colors.bg).then(backScale)) {
         AndOnbTopBar()
         AndOnbRail(index = stepIndex, total = steps.size)
 

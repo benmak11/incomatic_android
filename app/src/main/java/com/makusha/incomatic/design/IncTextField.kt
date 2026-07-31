@@ -21,6 +21,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -48,6 +50,7 @@ fun IncTextField(
             focused = focused,
             onFocusChanged = { focused = it },
             textStyle = IncType.title,
+            accessibleLabel = label,
             modifier = Modifier.fillMaxWidth().underline(if (focused) colors.sage else colors.hairline),
         )
     }
@@ -87,6 +90,7 @@ fun IncMoneyField(
                 focused = focused,
                 onFocusChanged = { focused = it },
                 textStyle = IncType.cardMoney,
+                accessibleLabel = label,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -108,13 +112,16 @@ private fun UnderlineInput(
     focused: Boolean,
     onFocusChanged: (Boolean) -> Unit,
     textStyle: TextStyle,
+    accessibleLabel: String,
     modifier: Modifier = Modifier,
 ) {
     val colors = incColors()
     BasicTextField(
         value = value,
         onValueChange = onChange,
-        modifier = modifier.onFocusChanged { onFocusChanged(it.isFocused) },
+        modifier = modifier
+            .semantics { contentDescription = accessibleLabel }
+            .onFocusChanged { onFocusChanged(it.isFocused) },
         textStyle = textStyle.copy(color = colors.text),
         singleLine = true,
         cursorBrush = SolidColor(colors.sage),

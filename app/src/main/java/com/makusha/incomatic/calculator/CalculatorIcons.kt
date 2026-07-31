@@ -11,14 +11,17 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 
 /** Hand-drawn Canvas icons approximating the design's card-header SVGs. */
 enum class CalcIcon { WALLET, FLAG, PIN, HEART, CHART, SEED }
 
+/** Decorative — the adjacent IncCardHeader title already carries the same information. */
 @Composable
 fun CalcCardIcon(icon: CalcIcon, color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier.size(17.dp)) { drawCalcIcon(icon, color) }
+    Canvas(modifier = modifier.size(17.dp).semantics { hideFromAccessibility() }) { drawCalcIcon(icon, color) }
 }
 
 private fun DrawScope.drawCalcIcon(icon: CalcIcon, color: Color) {

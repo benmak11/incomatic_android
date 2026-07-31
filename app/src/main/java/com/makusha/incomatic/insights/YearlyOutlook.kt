@@ -25,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -227,6 +229,7 @@ private fun ExpandChevron(expanded: Boolean) {
     }
 }
 
+/** Decorative — the caption row below each bar already states every figure in words. */
 @Composable
 private fun RowScope.SegmentBar(color: Color, fraction: Float) {
     Box(
@@ -235,6 +238,7 @@ private fun RowScope.SegmentBar(color: Color, fraction: Float) {
             .fillMaxHeight()
             .padding(end = 1.5.dp)
             .clip(RoundedCornerShape(50))
-            .background(color),
+            .background(color)
+            .semantics { hideFromAccessibility() },
     )
 }

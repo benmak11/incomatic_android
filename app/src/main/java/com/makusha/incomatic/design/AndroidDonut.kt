@@ -17,6 +17,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -52,7 +54,8 @@ fun AndroidDonut(
     }
 
     Box(modifier = modifier.size(size), contentAlignment = Alignment.Center) {
-        Canvas(modifier = Modifier.size(size)) {
+        // Decorative — center() (e.g. the take-home total) carries the actual figures.
+        Canvas(modifier = Modifier.size(size).semantics { hideFromAccessibility() }) {
             val strokePx = thickness.toPx()
             val diameter = this.size.minDimension - strokePx
             val topLeft = Offset((this.size.width - diameter) / 2f, (this.size.height - diameter) / 2f)

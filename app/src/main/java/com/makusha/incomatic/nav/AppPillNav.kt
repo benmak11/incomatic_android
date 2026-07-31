@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -31,6 +31,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -69,6 +71,7 @@ private val PillSpring = spring<Float>(dampingRatio = 0.85f)
 @Composable
 private fun CompactHandle(tab: MainTab, onExpand: () -> Unit) {
     val colors = incColors()
+    val haptics = LocalHapticFeedback.current
     Box(modifier = Modifier.padding(start = 20.dp, bottom = 22.dp)) {
         IncRippleScope {
             Box(
@@ -78,7 +81,10 @@ private fun CompactHandle(tab: MainTab, onExpand: () -> Unit) {
                     .clip(CircleShape)
                     .background(colors.surface)
                     .border(1.dp, colors.hairline, CircleShape)
-                    .clickable(onClick = onExpand),
+                    .clickable {
+                        haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
+                        onExpand()
+                    },
                 contentAlignment = Alignment.Center,
             ) {
                 Canvas(modifier = Modifier.size(20.dp)) { tabIcon(tab, colors.sageDeep) }
@@ -90,6 +96,7 @@ private fun CompactHandle(tab: MainTab, onExpand: () -> Unit) {
 @Composable
 private fun ExpandedTrack(tab: MainTab, onTabSelected: (MainTab) -> Unit) {
     val colors = incColors()
+    val haptics = LocalHapticFeedback.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -106,10 +113,13 @@ private fun ExpandedTrack(tab: MainTab, onTabSelected: (MainTab) -> Unit) {
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .height(46.dp)
+                        .heightIn(min = 46.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .let { m -> if (on) m.background(colors.surface) else m }
-                        .clickable { onTabSelected(t) },
+                        .clickable {
+                            if (!on) haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                            onTabSelected(t)
+                        },
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

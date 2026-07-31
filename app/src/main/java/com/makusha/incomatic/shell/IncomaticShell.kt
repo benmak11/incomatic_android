@@ -1,6 +1,5 @@
 package com.makusha.incomatic.shell
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +25,7 @@ import com.makusha.incomatic.calculator.CalculatorViewModel
 import com.makusha.incomatic.design.IncCard
 import com.makusha.incomatic.design.IncType
 import com.makusha.incomatic.design.incColors
+import com.makusha.incomatic.design.rememberPredictiveBackScale
 import com.makusha.incomatic.equity.EquityViewModel
 import com.makusha.incomatic.equity.GrantsDialog
 import com.makusha.incomatic.insights.InsightsScreen
@@ -53,11 +53,11 @@ fun IncomaticShell(viewModel: CalculatorViewModel, equityViewModel: EquityViewMo
     val colors = incColors()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    BackHandler(enabled = tab != MainTab.Calculator) {
+    val backScale = rememberPredictiveBackScale(enabled = tab != MainTab.Calculator) {
         tab = MainTab.Calculator
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(colors.bg)) {
+    Box(modifier = Modifier.fillMaxSize().background(colors.bg).then(backScale)) {
         when (tab) {
             MainTab.Calculator -> CalculatorTab(
                 uiState = uiState,

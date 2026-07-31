@@ -14,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,6 +33,7 @@ fun IncButton(
 ) {
     val colors = incColors()
     val shape = RoundedCornerShape(14.dp)
+    val haptics = LocalHapticFeedback.current
     val (bg, fg, borderColor) = when (variant) {
         IncButtonVariant.FILLED -> Triple(if (!enabled) colors.disabled else colors.sage, Color.White, null)
         IncButtonVariant.SOLID -> Triple(colors.btnSolid, colors.btnSolidText, null)
@@ -46,7 +49,14 @@ fun IncButton(
                 .clip(shape)
                 .background(bg)
                 .let { m -> if (borderColor != null) m.border(1.dp, borderColor, shape) else m }
-                .let { m -> if (enabled) m.clickable(onClick = onClick) else m }
+                .let { m ->
+                    if (enabled) {
+                        m.clickable {
+                            haptics.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                            onClick()
+                        }
+                    } else m
+                }
                 .padding(horizontal = 20.dp),
             contentAlignment = Alignment.Center,
         ) {

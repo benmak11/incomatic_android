@@ -21,6 +21,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -38,6 +40,7 @@ fun <T> IncSegmented(
     label: String? = null,
 ) {
     val colors = incColors()
+    val haptics = LocalHapticFeedback.current
     Column(modifier = Modifier.fillMaxWidth().padding(bottom = 18.dp)) {
         if (label != null) IncLabel(label)
         Row(
@@ -52,7 +55,10 @@ fun <T> IncSegmented(
                     Row(
                         modifier = Modifier
                             .weight(1f)
-                            .clickable { onChange(opt.value) }
+                            .clickable {
+                                if (!sel) haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                                onChange(opt.value)
+                            }
                             .let { m -> if (sel) m.background(colors.sageBg) else m }
                             .let { m ->
                                 if (i > 0) {
