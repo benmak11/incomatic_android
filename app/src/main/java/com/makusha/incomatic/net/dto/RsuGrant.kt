@@ -2,11 +2,7 @@ package com.makusha.incomatic.net.dto
 
 import kotlinx.serialization.Serializable
 
-/**
- * Mirrors the backend's RsuGrant.java field-for-field. Server-assigned ids
- * are only meaningful once grant sync exists (Phase 4-blocked); local-only
- * grants get a client-generated "local_" id (see data/GrantsStore.kt).
- */
+/** Mirrors the backend's RsuGrant.java field-for-field. Id is server-assigned; null on create. */
 @Serializable
 data class RsuGrant(
     val id: String? = null,
@@ -26,3 +22,7 @@ data class RsuGrant(
         val freqMonths: Int,
     )
 }
+
+/** Mirrors the backend's GrantListResponse.java. */
+@Serializable
+data class GrantListResponse(val items: List<RsuGrant>)

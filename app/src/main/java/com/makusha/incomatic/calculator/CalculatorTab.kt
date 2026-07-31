@@ -31,11 +31,13 @@ import kotlin.math.abs
 fun CalculatorTab(
     uiState: CalculatorUiState,
     equity: EquityViewModel,
+    signedIn: Boolean,
     onFormUpdate: ((CalculatorState) -> CalculatorState) -> Unit,
     onSectionChange: (CalculatorSection) -> Unit,
     onCalculate: () -> Unit,
     onCompactChange: (Boolean) -> Unit,
     onOpenGrants: () -> Unit,
+    onShowAccount: () -> Unit,
 ) {
     val scrollState = rememberScrollState()
     val density = LocalDensity.current
@@ -69,7 +71,7 @@ fun CalculatorTab(
                 onSelect = onSectionChange,
             )
             when (uiState.section) {
-                CalculatorSection.EARNINGS -> AndEarnings(uiState.form, onFormUpdate, equity, onOpenGrants)
+                CalculatorSection.EARNINGS -> AndEarnings(uiState.form, onFormUpdate, equity, signedIn, onOpenGrants, onShowAccount)
                 CalculatorSection.FEDERAL -> AndFederal(uiState.form, onFormUpdate)
                 CalculatorSection.STATE -> AndState(uiState.form, uiState.usStates, onFormUpdate)
                 CalculatorSection.BENEFITS -> AndBenefits(uiState.form, onFormUpdate)

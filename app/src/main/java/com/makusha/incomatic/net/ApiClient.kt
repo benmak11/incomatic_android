@@ -13,12 +13,25 @@ object ApiClient {
         explicitNulls = false
     }
 
+    /** Set once by AccountManager on init, read on every request. Null when signed out. */
+    var sessionTokenProvider: () -> String? = { null }
+
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder().apply {
+            addInterceptor { chain ->
+                val token = sessionTokenProvider()
+                val request = if (token != null) {
+                    chain.request().newBuilder().addHeader("Authorization", "Bearer $token").build()
+                } else {
+                    chain.request()
+                }
+                chain.proceed(request)
+            }
             if (BuildConfig.DEBUG) {
-                // BASIC only — method, URL, response code. Never BODY: request
-                // bodies carry salary figures, which must never hit logs (same
-                // rule the backend itself follows).
+                // BASIC only — method, URL, response code. Never BODY/HEADERS: request
+                // bodies carry salary figures and the Authorization header carries the
+                // session token, neither of which may hit logs (same rule the backend
+                // itself follows).
                 addInterceptor(
                     HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BASIC },
                 )

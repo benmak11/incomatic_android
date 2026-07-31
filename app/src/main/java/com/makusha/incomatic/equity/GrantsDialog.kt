@@ -60,6 +60,7 @@ private sealed class EquityScreen {
 fun GrantsDialog(equity: EquityViewModel, onDismiss: () -> Unit) {
     var screen by remember { mutableStateOf<EquityScreen>(EquityScreen.List) }
     val grants by equity.grants.collectAsStateWithLifecycle()
+    val errorMessage by equity.errorMessage.collectAsStateWithLifecycle()
     val colors = incColors()
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
@@ -95,7 +96,8 @@ fun GrantsDialog(equity: EquityViewModel, onDismiss: () -> Unit) {
                     )
                     GrantForm(
                         existing = s.existing,
-                        onSave = { saved -> equity.save(saved); screen = EquityScreen.Detail(saved) },
+                        equity = equity,
+                        onSaved = { saved -> screen = EquityScreen.Detail(saved) },
                     )
                 }
                 is EquityScreen.Detail -> {
@@ -110,9 +112,17 @@ fun GrantsDialog(equity: EquityViewModel, onDismiss: () -> Unit) {
                     }
                     GrantDetail(
                         grant = current,
-                        onDelete = { current.id?.let(equity::delete); screen = EquityScreen.List },
+                        onDelete = { equity.delete(current); screen = EquityScreen.List },
                     )
                 }
+            }
+            if (errorMessage != null) {
+                Text(
+                    errorMessage.orEmpty(),
+                    style = IncType.secondary,
+                    color = colors.red,
+                    modifier = Modifier.padding(horizontal = 22.dp, vertical = 10.dp),
+                )
             }
         }
     }

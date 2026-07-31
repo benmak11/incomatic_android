@@ -41,17 +41,19 @@ import com.makusha.incomatic.util.formatMoney
 
 /**
  * "Equity / RSUs" card in the Earnings section — port of iOS's
- * EquityCardView, trimmed to two states instead of three: Android grants
- * work locally regardless of auth, so there's no separate signed-out
- * variant. An explicit manual override always wins over the grant-derived
- * total, same as iOS.
+ * EquityCardView, now with the same three states: signed out (plain
+ * annual value field + sign-in hint), signed in without grants (add CTA),
+ * signed in with grants (vesting-this-year summary). An explicit manual
+ * override always wins over the grant-derived total, same as iOS.
  */
 @Composable
 fun EquityCard(
     form: CalculatorState,
     update: ((CalculatorState) -> CalculatorState) -> Unit,
     equity: EquityViewModel,
+    signedIn: Boolean,
     onOpenGrants: () -> Unit,
+    onShowAccount: () -> Unit,
 ) {
     val colors = incColors()
     val grants by equity.grants.collectAsStateWithLifecycle()
@@ -64,6 +66,10 @@ fun EquityCard(
             title = "Equity / RSUs",
             subtitle = "Vests count as supplemental income",
         )
+        if (!signedIn) {
+            SignedOutBody(form = form, update = update, onShowAccount = onShowAccount)
+            return@IncCard
+        }
         if (grants.isEmpty()) {
             AddGrantsRow(onClick = onOpenGrants)
         } else {
@@ -91,6 +97,33 @@ fun EquityCard(
                 modifier = Modifier
                     .padding(top = 6.dp)
                     .clickable { showOverrideField = true },
+            )
+        }
+    }
+}
+
+@Composable
+private fun SignedOutBody(
+    form: CalculatorState,
+    update: ((CalculatorState) -> CalculatorState) -> Unit,
+    onShowAccount: () -> Unit,
+) {
+    val colors = incColors()
+    Column {
+        IncMoneyField(
+            label = "RSU value vesting this year (annual)",
+            value = form.rsuOverride,
+            onChange = { v -> update { it.copy(rsuOverride = v) } },
+        )
+        Row(
+            modifier = Modifier.clickable(onClick = onShowAccount),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(
+                "Sign in to model grants and vesting schedules",
+                style = IncType.secondary.copy(fontSize = 12.sp),
+                color = colors.textDim,
             )
         }
     }
