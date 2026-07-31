@@ -78,6 +78,7 @@ dependencies {
     // debugImplementation would break assembleRelease with an unresolved
     // reference since the class wouldn't be on the release classpath.
     implementation(libs.okhttp.logging.interceptor)
+    implementation(libs.androidx.datastore.preferences)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

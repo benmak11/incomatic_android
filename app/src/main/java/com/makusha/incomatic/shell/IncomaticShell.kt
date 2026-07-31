@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.makusha.incomatic.calculator.CalculatorTab
 import com.makusha.incomatic.calculator.CalculatorViewModel
 import com.makusha.incomatic.design.IncCard
@@ -37,14 +36,16 @@ import kotlin.math.abs
 /**
  * Tabs are plain state, not a NavHost — matching iOS and the design doc's
  * explicit choice. Calculator and Insights are real (Phase 2); History
- * stays a placeholder until auth exists (Phase 4).
+ * stays a placeholder until auth exists (Phase 4). [viewModel] is hoisted
+ * to [com.makusha.incomatic.shell.AppRoot] (Phase 3) so Onboarding and the
+ * Shell share one instance; [startTab] lets Onboarding hand off straight
+ * into Insights after a first calculation.
  */
 @Composable
-fun IncomaticShell() {
-    var tab by remember { mutableStateOf(MainTab.Calculator) }
+fun IncomaticShell(viewModel: CalculatorViewModel, startTab: MainTab = MainTab.Calculator) {
+    var tab by remember { mutableStateOf(startTab) }
     var compact by remember { mutableStateOf(false) }
     val colors = incColors()
-    val viewModel: CalculatorViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     BackHandler(enabled = tab != MainTab.Calculator) {
