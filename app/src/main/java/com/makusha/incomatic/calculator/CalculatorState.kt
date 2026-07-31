@@ -17,6 +17,13 @@ enum class PayFrequencyOption(val label: String, val cadence: PayCadence) {
     ANNUAL("Annual", PayCadence.ANNUAL),
 }
 
+/** Shared between the Calculator's Federal section and Onboarding's filing-status step. */
+fun filingStatusLabel(status: FilingStatus): String = when (status) {
+    FilingStatus.SINGLE -> "Single or married filing separately"
+    FilingStatus.MARRIED -> "Married filing jointly"
+    FilingStatus.HEAD_OF_HOUSEHOLD -> "Head of household"
+}
+
 /**
  * Form state for the Calculator's four sections. Field set mirrors the
  * design's AND_FORM seed. Meant to be shared with Onboarding (Phase 3) once

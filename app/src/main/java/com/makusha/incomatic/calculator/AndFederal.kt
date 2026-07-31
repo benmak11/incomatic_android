@@ -15,12 +15,6 @@ import com.makusha.incomatic.design.IncSwitch
 import com.makusha.incomatic.design.incColors
 import com.makusha.incomatic.net.dto.FilingStatus
 
-private fun filingStatusLabel(status: FilingStatus): String = when (status) {
-    FilingStatus.SINGLE -> "Single or married filing separately"
-    FilingStatus.MARRIED -> "Married filing jointly"
-    FilingStatus.HEAD_OF_HOUSEHOLD -> "Head of household"
-}
-
 @Composable
 fun AndFederal(form: CalculatorState, update: ((CalculatorState) -> CalculatorState) -> Unit) {
     val colors = incColors()
