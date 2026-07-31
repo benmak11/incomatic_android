@@ -38,6 +38,10 @@ android {
             "boolean", "USE_LOCAL_BACKEND",
             localProperties.getProperty("USE_LOCAL_BACKEND", "false"),
         )
+        buildConfigField(
+            "String", "GOOGLE_WEB_CLIENT_ID",
+            "\"${localProperties.getProperty("GOOGLE_WEB_CLIENT_ID", "")}\"",
+        )
     }
 
     buildTypes {
@@ -79,6 +83,10 @@ dependencies {
     // reference since the class wouldn't be on the release classpath.
     implementation(libs.okhttp.logging.interceptor)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation(libs.androidx.security.crypto)
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)

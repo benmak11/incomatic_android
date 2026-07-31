@@ -22,7 +22,9 @@ fun AndEarnings(
     form: CalculatorState,
     update: ((CalculatorState) -> CalculatorState) -> Unit,
     equity: EquityViewModel,
+    signedIn: Boolean,
     onOpenGrants: () -> Unit,
+    onShowAccount: () -> Unit,
 ) {
     val colors = incColors()
     androidx.compose.foundation.layout.Column(modifier = Modifier.padding(horizontal = 16.dp)) {
@@ -78,6 +80,6 @@ fun AndEarnings(
             )
             IncMoneyField(label = "Commission (annual)", value = form.commission, onChange = { v -> update { it.copy(commission = v) } })
         }
-        EquityCard(form = form, update = update, equity = equity, onOpenGrants = onOpenGrants)
+        EquityCard(form = form, update = update, equity = equity, signedIn = signedIn, onOpenGrants = onOpenGrants, onShowAccount = onShowAccount)
     }
 }

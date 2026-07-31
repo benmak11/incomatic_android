@@ -25,4 +25,9 @@ object AppConfig {
         } else {
             BuildConfig.API_BASE_URL_PROD
         }
+
+    /** Web-type OAuth client id — the Credential Manager `serverClientId` and the
+     * token audience the backend's `GOOGLE_AUDIENCE` checks against. Not a secret;
+     * OAuth client ids are meant to be embedded in client apps. */
+    val googleWebClientId: String get() = BuildConfig.GOOGLE_WEB_CLIENT_ID
 }
