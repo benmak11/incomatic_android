@@ -23,11 +23,17 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.makusha.incomatic.util.groupThousands
+import com.makusha.incomatic.util.sanitizeCurrency
 
 /** Underline text field — plain string input (ticker symbols, free text). */
 @Composable
@@ -84,7 +90,7 @@ fun IncMoneyField(
             Spacer(Modifier.width(8.dp))
             UnderlineInput(
                 value = value,
-                onChange = onChange,
+                onChange = { raw -> onChange(sanitizeCurrency(raw)) },
                 placeholder = placeholder,
                 keyboardType = KeyboardType.Decimal,
                 focused = focused,
@@ -92,6 +98,7 @@ fun IncMoneyField(
                 textStyle = IncType.cardMoney,
                 accessibleLabel = label,
                 modifier = Modifier.weight(1f),
+                visualTransformation = ThousandsSeparatorVisualTransformation,
             )
         }
     }
@@ -114,6 +121,7 @@ private fun UnderlineInput(
     textStyle: TextStyle,
     accessibleLabel: String,
     modifier: Modifier = Modifier,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
     val colors = incColors()
     BasicTextField(
@@ -126,6 +134,7 @@ private fun UnderlineInput(
         singleLine = true,
         cursorBrush = SolidColor(colors.sage),
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        visualTransformation = visualTransformation,
         decorationBox = { inner ->
             if (value.isEmpty() && placeholder != null) {
                 Text(placeholder, style = textStyle, color = colors.textMute)
@@ -133,4 +142,50 @@ private fun UnderlineInput(
             inner()
         },
     )
+}
+
+/**
+ * Live "1,234.56"-style grouping for money fields — [value] stays raw
+ * (un-grouped) in state; this only affects what's drawn. Mirrors iOS's
+ * CalculatorFields.currencyBinding's get-side formatting. Cursor offsets are
+ * mapped via a forward pass counting commas inserted before each raw index
+ * (an iterative approach, not a closed-form formula, since it's the more
+ * reliable way to get this right).
+ */
+private object ThousandsSeparatorVisualTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val raw = text.text
+        val transformed = groupThousands(raw)
+
+        val dotIndex = raw.indexOf('.')
+        val intLen = if (dotIndex >= 0) dotIndex else raw.length
+        // commasBefore[i] = number of commas inserted before raw index i, for i in 0..intLen.
+        val commasBefore = IntArray(intLen + 1)
+        for (i in 1..intLen) {
+            val digitsAfter = intLen - i
+            val extra = if (digitsAfter > 0 && digitsAfter % 3 == 0) 1 else 0
+            commasBefore[i] = commasBefore[i - 1] + extra
+        }
+        val totalCommas = if (intLen == 0) 0 else commasBefore[intLen]
+        val transformedIntLen = intLen + totalCommas
+
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                val o = offset.coerceIn(0, raw.length)
+                return if (o <= intLen) o + commasBefore[o] else o + totalCommas
+            }
+
+            override fun transformedToOriginal(offset: Int): Int {
+                val o = offset.coerceIn(0, transformed.length)
+                return if (o <= transformedIntLen) {
+                    var commas = 0
+                    for (i in 0 until o) if (transformed[i] == ',') commas++
+                    o - commas
+                } else {
+                    o - totalCommas
+                }
+            }
+        }
+        return TransformedText(AnnotatedString(transformed), offsetMapping)
+    }
 }
