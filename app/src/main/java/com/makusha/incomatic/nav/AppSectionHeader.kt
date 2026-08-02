@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -19,7 +20,10 @@ import com.makusha.incomatic.design.incColors
 /**
  * Serif page title (34sp, -1 tracking — the Android stand-in for iOS's New
  * York title) + optional hairline section tabs with a 2dp sage underline.
- * Insights/History pass no sections and just show the title.
+ * Insights/History pass no sections and just show the title. [trailing]
+ * renders beside the title (e.g. the Calculator tab's live per-paycheck
+ * figure) — kept generic so this shared component doesn't need to know
+ * about Calculator-specific types.
  */
 @Composable
 fun <T> AppSectionHeader(
@@ -28,10 +32,22 @@ fun <T> AppSectionHeader(
     selected: T? = null,
     labelOf: (T) -> String = { it.toString() },
     onSelect: (T) -> Unit = {},
+    trailing: (@Composable () -> Unit)? = null,
 ) {
     val colors = incColors()
     Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = 26.dp, bottom = 18.dp)) {
-        Text(title, style = IncType.pageTitle, color = colors.text)
+        if (trailing != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                Text(title, style = IncType.pageTitle, color = colors.text)
+                trailing()
+            }
+        } else {
+            Text(title, style = IncType.pageTitle, color = colors.text)
+        }
         if (sections.isNotEmpty()) {
             Row(
                 modifier = Modifier

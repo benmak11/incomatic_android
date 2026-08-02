@@ -67,10 +67,11 @@ fun IncomaticShell(
                 uiState = uiState,
                 equity = equityViewModel,
                 signedIn = currentUser != null,
+                currentTab = tab,
+                onTabSelected = { tab = it; compact = false },
                 onFormUpdate = viewModel::updateForm,
                 onSectionChange = viewModel::setSection,
                 onCalculate = { viewModel.calculate(equityViewModel.vestingThisYear) { tab = MainTab.Insights } },
-                onCompactChange = { compact = it },
                 onOpenGrants = { showGrantsDialog = true },
                 onShowAccount = { showAccountSheet = true },
             )
@@ -94,13 +95,19 @@ fun IncomaticShell(
             modifier = Modifier.align(Alignment.TopEnd).padding(top = 14.dp, end = 18.dp),
         )
 
-        AppPillNav(
-            tab = tab,
-            onTabSelected = { tab = it; compact = false },
-            compact = compact,
-            onExpand = { compact = false },
-            modifier = Modifier.align(Alignment.BottomCenter),
-        )
+        // Calculator embeds its own copy of AppPillNav inside
+        // CalculatorBottomDock (combined with the CTA, to fix the overlap
+        // this floating copy used to cause there); this floating instance
+        // now only serves Insights/History.
+        if (tab != MainTab.Calculator) {
+            AppPillNav(
+                tab = tab,
+                onTabSelected = { tab = it; compact = false },
+                compact = compact,
+                onExpand = { compact = false },
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
+        }
     }
 
     if (showGrantsDialog) {
