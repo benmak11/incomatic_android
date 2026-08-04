@@ -1,0 +1,112 @@
+name: Publish to Play
+
+# Mirrors incomatic (iOS)'s ios-testflight.yml: a version tag pushed by
+# tag.yml triggers a signed build that uploads to a testing track. Promotion
+# to production stays a manual Play Console step.
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      track:
+        description: Play track to upload to
+        type: choice
+        default: internal
+        options:
+          - internal
+          - alpha
+          - beta
+      tag:
+        description: Existing version tag to build (e.g. v1.0.0)
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build and upload App Bundle
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          # A manual run checks out the requested tag rather than the branch,
+          # so the version stamped into the build always comes from a tag.
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      # Fail before doing any work rather than part-way through an upload, and
+      # before Gradle silently builds an unsigned or misconfigured artifact.
+      - name: Verify required secrets are present
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          API_BASE_URL_PROD: ${{ secrets.API_BASE_URL_PROD }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
+        run: |
+          missing=()
+          for name in RELEASE_KEYSTORE_BASE64 RELEASE_KEYSTORE_PASSWORD \
+                      RELEASE_KEY_ALIAS RELEASE_KEY_PASSWORD \
+                      PLAY_SERVICE_ACCOUNT_JSON API_BASE_URL_PROD \
+                      GOOGLE_WEB_CLIENT_ID; do
+            [ -n "${!name}" ] || missing+=("$name")
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing repository secrets: ${missing[*]}"
+            exit 1
+          fi
+
+      - name: Resolve version from tag
+        run: |
+          ref_name="${{ inputs.tag || github.ref_name }}"
+          # Fail rather than fall back. iOS shipped four releases stamped with a
+          # stale version because its equivalent step degraded quietly.
+          if ! printf '%s' "$ref_name" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Expected a version tag like v1.2.3, got '$ref_name'."
+            exit 1
+          fi
+          echo "VERSION_NAME=${ref_name#v}" >> "$GITHUB_ENV"
+
+      - name: Write signing and publishing credentials
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          # GitHub secrets can't hold binaries, so the keystore travels as
+          # base64 and is decoded to a file the Gradle config can point at.
+          printf '%s' "$RELEASE_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/upload-keystore.jks"
+          printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/play-service-account.json"
+
+      - name: Publish App Bundle
+        env:
+          RELEASE_KEYSTORE_FILE: ${{ runner.temp }}/upload-keystore.jks
+          RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          PLAY_SERVICE_ACCOUNT_JSON_FILE: ${{ runner.temp }}/play-service-account.json
+          PLAY_TRACK: ${{ inputs.track || 'internal' }}
+          API_BASE_URL_PROD: ${{ secrets.API_BASE_URL_PROD }}
+          GOOGLE_WEB_CLIENT_ID: ${{ secrets.GOOGLE_WEB_CLIENT_ID }}
+        run: ./gradlew publishReleaseBundle --no-configuration-cache
+
+      - name: Remove credentials from the runner
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload-keystore.jks" "$RUNNER_TEMP/play-service-account.json"

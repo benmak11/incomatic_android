@@ -17,6 +17,7 @@ credentials = "1.6.0"
 googleid = "1.2.0"
 securityCrypto = "1.1.0"
 reviewKtx = "2.0.2"
+playPublisher = "4.0.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -52,3 +53,4 @@ play-review-ktx = { group = "com.google.android.play", name = "review-ktx", vers
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+play-publisher = { id = "com.github.triplet.play", version.ref = "playPublisher" }
