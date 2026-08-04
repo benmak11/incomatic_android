@@ -1,5 +1,6 @@
 package com.makusha.incomatic.shell
 
+import android.app.Activity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,8 +13,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.google.android.play.core.review.ReviewManagerFactory
 import com.makusha.incomatic.account.AccountManager
 import com.makusha.incomatic.account.AccountSheet
 import com.makusha.incomatic.calculator.CalculatorTab
@@ -54,8 +57,27 @@ fun IncomaticShell(
     val colors = incColors()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val currentUser by accountManager.currentUser.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     LaunchedEffect(currentUser) { equityViewModel.load(currentUser != null) }
+
+    // Fires exactly once, on the 3rd successful calculation (see
+    // ReviewPrefs.recordSuccessfulCalculation). The ViewModel can't hold an
+    // Activity itself, so the native Play In-App Review flow is launched
+    // from here instead, where LocalContext gives us one.
+    LaunchedEffect(viewModel) {
+        viewModel.reviewPromptEvent.collect {
+            val manager = ReviewManagerFactory.create(context)
+            val request = manager.requestReviewFlow()
+            request.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    (context as? Activity)?.let { activity ->
+                        manager.launchReviewFlow(activity, task.result)
+                    }
+                }
+            }
+        }
+    }
 
     val backScale = rememberPredictiveBackScale(enabled = tab != MainTab.Calculator) {
         tab = MainTab.Calculator
