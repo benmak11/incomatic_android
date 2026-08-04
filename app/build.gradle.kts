@@ -13,6 +13,52 @@ val localProperties = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
+// Release signing material. CI sets these as environment variables; locally
+// they live in the same gitignored local.properties as the runtime config
+// above. Environment wins so CI never depends on a file being present.
+fun signingValue(key: String): String? =
+    System.getenv(key)?.takeIf { it.isNotBlank() }
+        ?: localProperties.getProperty(key)?.takeIf { it.isNotBlank() }
+
+// GitHub secrets can't hold binaries, so CI base64-decodes the keystore to a
+// file first and passes its path here — Gradle only ever deals in paths.
+val releaseKeystoreFile = signingValue("RELEASE_KEYSTORE_FILE")?.let(::file)
+val releaseKeystorePassword = signingValue("RELEASE_KEYSTORE_PASSWORD")
+val releaseKeyAlias = signingValue("RELEASE_KEY_ALIAS")
+val releaseKeyPassword = signingValue("RELEASE_KEY_PASSWORD")
+
+// Nothing configured at all (a contributor's checkout, a PR build with no
+// secrets) leaves the release build unsigned rather than failing it — same
+// behavior as before this block existed.
+val releaseSigningValues = listOf(
+    releaseKeystoreFile?.path,
+    releaseKeystorePassword,
+    releaseKeyAlias,
+    releaseKeyPassword,
+)
+val hasReleaseSigning = releaseSigningValues.all { it != null } &&
+    releaseKeystoreFile?.exists() == true
+
+// A partially configured keystore is always a mistake — a typo'd secret name
+// would otherwise publish an unsigned artifact and fail confusingly at upload
+// time instead of here.
+if (!hasReleaseSigning && releaseSigningValues.any { it != null }) {
+    val problems = buildList {
+        if (releaseKeystoreFile == null) add("RELEASE_KEYSTORE_FILE is not set")
+        if (releaseKeystorePassword == null) add("RELEASE_KEYSTORE_PASSWORD is not set")
+        if (releaseKeyAlias == null) add("RELEASE_KEY_ALIAS is not set")
+        if (releaseKeyPassword == null) add("RELEASE_KEY_PASSWORD is not set")
+        if (releaseKeystoreFile?.exists() == false) {
+            add("no keystore at ${releaseKeystoreFile.path}")
+        }
+    }
+    error(
+        "Release signing is misconfigured: ${problems.joinToString("; ")}. " +
+            "Set all four in local.properties or the environment, or none of " +
+            "them to build unsigned.",
+    )
+}
+
 android {
     namespace = "com.makusha.incomatic"
     compileSdk {
@@ -44,10 +90,27 @@ android {
         )
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = releaseKeystoreFile
+                storePassword = releaseKeystorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+                // Signature scheme versions are left to AGP's minSdk-derived
+                // defaults: at minSdk 26 every install target supports v2, so
+                // v1 (JAR signing) is correctly skipped.
+            }
+        }
+    }
+
     buildTypes {
         release {
             optimization {
                 enable = false
+            }
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
             }
         }
     }
