@@ -8,3 +8,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Release signing — key material never goes into VCS. Keep an offline backup
+# of the upload keystore; under Play App Signing a lost upload key can be
+# reset through Play Console, but that is a support round-trip, not a no-op.
+*.jks
+*.keystore
