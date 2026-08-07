@@ -70,7 +70,7 @@ fun CalculatorState.toCalculateRequest(grantsRsuValue: Double = 0.0): CalculateR
 
     return CalculateRequest(
         country = Country.US,
-        taxYear = AppConfig.TAX_YEAR,
+        taxYear = AppConfig.taxYear,
         earnings = earnings,
         cadence = payFrequency.cadence,
         pretax = pretax,

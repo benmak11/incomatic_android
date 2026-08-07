@@ -49,7 +49,7 @@ fun VestTimeline(grant: RsuGrant) {
 
     Column {
         groups.forEach { group ->
-            val isCurrent = group.year == AppConfig.TAX_YEAR
+            val isCurrent = group.year == AppConfig.taxYear
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -80,7 +80,7 @@ fun VestTimeline(grant: RsuGrant) {
                 }
                 if (isCurrent) {
                     Text(
-                        "Counts toward your ${AppConfig.TAX_YEAR} paycheck",
+                        "Counts toward your ${AppConfig.taxYear} paycheck",
                         style = IncType.secondary.copy(fontWeight = FontWeight.SemiBold),
                         color = colors.sage,
                         modifier = Modifier.padding(start = 18.dp),

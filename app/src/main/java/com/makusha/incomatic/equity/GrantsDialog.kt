@@ -176,7 +176,7 @@ private fun GrantsList(grants: List<RsuGrant>, onSelect: (RsuGrant) -> Unit, onA
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp)) {
         grants.forEach { grant -> GrantRow(grant, onClick = { onSelect(grant) }) }
         Text(
-            "Estimates value all ${AppConfig.TAX_YEAR} vests at today's price. Actual tax withholding happens at each vest at that day's price.",
+            "Estimates value all ${AppConfig.taxYear} vests at today's price. Actual tax withholding happens at each vest at that day's price.",
             style = IncType.secondary.copy(fontSize = 11.5.sp),
             color = colors.textDim,
             modifier = Modifier.padding(top = 8.dp, bottom = 16.dp),
@@ -189,7 +189,7 @@ private val NEXT_VEST_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern
 @Composable
 private fun GrantRow(grant: RsuGrant, onClick: () -> Unit) {
     val colors = incColors()
-    val vestingThisYear = VestMath.value(AppConfig.TAX_YEAR, listOf(grant))
+    val vestingThisYear = VestMath.value(AppConfig.taxYear, listOf(grant))
     val next = VestMath.nextVest(grant)
 
     IncSubtleRippleScope {
@@ -204,7 +204,7 @@ private fun GrantRow(grant: RsuGrant, onClick: () -> Unit) {
             Text(grant.schedule.label(), style = IncType.secondary.copy(fontSize = 12.sp), color = colors.textMute)
             Row(modifier = Modifier.fillMaxWidth().padding(top = 2.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(
-                    "Vesting in ${AppConfig.TAX_YEAR}: ${formatMoney(vestingThisYear, cents = false)}",
+                    "Vesting in ${AppConfig.taxYear}: ${formatMoney(vestingThisYear, cents = false)}",
                     style = IncType.secondary.copy(fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold),
                     color = colors.sage,
                 )

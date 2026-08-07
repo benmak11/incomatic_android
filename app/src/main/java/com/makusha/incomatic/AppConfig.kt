@@ -6,9 +6,37 @@ package com.makusha.incomatic
  * BuildConfig fields injected from gitignored local.properties.
  */
 object AppConfig {
-    /** Tax year every calculation runs against — single source of truth for
-     * the request builder, bonus payout-date captions, and yearly outlook. */
-    const val TAX_YEAR = 2025
+    /**
+     * Newest tax year known to exist when this build shipped, used until the
+     * backend's supported-years list has been read at least once.
+     *
+     * Deliberately *not* derived from the current date. The backend throws when
+     * asked for a year it has no rule pack for, so rolling forward on January 1
+     * would break every calculation until that year's pack was published.
+     * Erring backwards costs one stale year; erring forwards costs the app.
+     */
+    const val FALLBACK_TAX_YEAR = 2026
+
+    @Volatile
+    private var cachedTaxYear: Int = FALLBACK_TAX_YEAR
+
+    /**
+     * Tax year every calculation runs against — single source of truth for the
+     * request builder, bonus payout-date captions, and yearly outlook.
+     *
+     * Resolved from the backend's `defaultTaxYear` and persisted by
+     * [com.makusha.incomatic.data.TaxYearPrefs]. Read synchronously because most
+     * callers are Compose bodies and pure value math; the persisted value is
+     * loaded before the shell renders and the refresh happens once at launch,
+     * so it is stable for the session. Was a hardcoded 2025 until 2026-08-06,
+     * which left Android a full tax year behind the deployed rule packs.
+     */
+    val taxYear: Int get() = cachedTaxYear
+
+    /** Ignores non-positive values so a malformed payload can't wipe a good year. */
+    fun cacheTaxYear(year: Int) {
+        if (year > 0) cachedTaxYear = year
+    }
 
     /** The Android emulator's loopback alias for the host machine — the
      * Android twin of iOS's localhost override. */

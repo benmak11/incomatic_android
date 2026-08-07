@@ -11,6 +11,7 @@ import com.makusha.incomatic.net.dto.SavedCalculationDetail
 import com.makusha.incomatic.net.dto.StockQuote
 import com.makusha.incomatic.net.dto.StockSearchResponse
 import com.makusha.incomatic.net.dto.StockSymbol
+import com.makusha.incomatic.net.dto.TaxYearsResponse
 import com.makusha.incomatic.net.dto.UsState
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
@@ -37,6 +38,11 @@ class SalaryCalculatorService(
     suspend fun getUsStates(): List<UsState> {
         val responseBody = api.getUsStates()
         return json.decodeFromString(ListSerializer(UsState.serializer()), responseBody.string())
+    }
+
+    suspend fun getTaxYears(country: String = "US"): TaxYearsResponse {
+        val responseBody = api.getTaxYears(country)
+        return json.decodeFromString(TaxYearsResponse.serializer(), responseBody.string())
     }
 
     suspend fun signInWithGoogle(idToken: String, displayName: String?): GoogleSignInResponse {
