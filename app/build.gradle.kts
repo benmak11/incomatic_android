@@ -1,9 +1,12 @@
+import com.github.triplet.gradle.androidpublisher.ReleaseStatus
+import com.github.triplet.gradle.androidpublisher.ResolutionStrategy
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.play.publisher)
 }
 
 // Runtime config lives in gitignored local.properties, mirroring incomatic
@@ -13,19 +16,19 @@ val localProperties = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
-// Release signing material. CI sets these as environment variables; locally
+// Release/publishing config. CI sets these as environment variables; locally
 // they live in the same gitignored local.properties as the runtime config
 // above. Environment wins so CI never depends on a file being present.
-fun signingValue(key: String): String? =
+fun envOrLocal(key: String): String? =
     System.getenv(key)?.takeIf { it.isNotBlank() }
         ?: localProperties.getProperty(key)?.takeIf { it.isNotBlank() }
 
 // GitHub secrets can't hold binaries, so CI base64-decodes the keystore to a
 // file first and passes its path here — Gradle only ever deals in paths.
-val releaseKeystoreFile = signingValue("RELEASE_KEYSTORE_FILE")?.let(::file)
-val releaseKeystorePassword = signingValue("RELEASE_KEYSTORE_PASSWORD")
-val releaseKeyAlias = signingValue("RELEASE_KEY_ALIAS")
-val releaseKeyPassword = signingValue("RELEASE_KEY_PASSWORD")
+val releaseKeystoreFile = envOrLocal("RELEASE_KEYSTORE_FILE")?.let(::file)
+val releaseKeystorePassword = envOrLocal("RELEASE_KEYSTORE_PASSWORD")
+val releaseKeyAlias = envOrLocal("RELEASE_KEY_ALIAS")
+val releaseKeyPassword = envOrLocal("RELEASE_KEY_PASSWORD")
 
 // Nothing configured at all (a contributor's checkout, a PR build with no
 // secrets) leaves the release build unsigned rather than failing it — same
@@ -59,6 +62,33 @@ if (!hasReleaseSigning && releaseSigningValues.any { it != null }) {
     )
 }
 
+// The git tag is the single source of truth for versionName, mirroring
+// incomatic (iOS). The publish workflow passes the tag explicitly; locally we
+// read the newest tag, falling back to a placeholder in a checkout that has
+// none yet — this repo stays untagged until its first release.
+val latestGitTag: String? = runCatching {
+    providers.exec {
+        commandLine("git", "describe", "--tags", "--abbrev=0")
+        isIgnoreExitValue = true
+    }.standardOutput.asText.get().trim()
+}.getOrNull()?.takeIf { it.isNotBlank() }
+
+val explicitVersionName = envOrLocal("VERSION_NAME")?.removePrefix("v")
+
+// Fail rather than fall back. iOS spent four releases stamping a stale
+// MARKETING_VERSION because its equivalent path degraded silently; a malformed
+// tag should stop the build, not ship under the wrong number.
+if (explicitVersionName != null && !Regex("""\d+\.\d+\.\d+""").matches(explicitVersionName)) {
+    error("VERSION_NAME must be a semantic version like 1.2.3, got '$explicitVersionName'.")
+}
+
+val appVersionName = explicitVersionName ?: latestGitTag?.removePrefix("v") ?: "0.0.0-dev"
+
+// Play publishing credentials. Absent locally and on PR builds, where the
+// publish tasks are never invoked — GPP only needs them when one actually runs.
+val playCredentialsFile = envOrLocal("PLAY_SERVICE_ACCOUNT_JSON_FILE")?.let(::file)
+val playTrack = envOrLocal("PLAY_TRACK") ?: "internal"
+
 android {
     namespace = "com.makusha.incomatic"
     compileSdk {
@@ -71,22 +101,28 @@ android {
         applicationId = "com.makusha.incomatic"
         minSdk = 26
         targetSdk = 36
+        // Placeholder floor only. Play is the source of truth for versionCode
+        // (see the play block below); this value is what gets used for the very
+        // first upload, when there is nothing in Play to increment from.
         versionCode = 1
-        versionName = "1.0"
+        versionName = appVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        // envOrLocal, not localProperties directly: CI has no local.properties,
+        // and a published build with an empty API base URL or client id would
+        // install fine and then fail every request at runtime.
         buildConfigField(
             "String", "API_BASE_URL_PROD",
-            "\"${localProperties.getProperty("API_BASE_URL_PROD", "")}\"",
+            "\"${envOrLocal("API_BASE_URL_PROD") ?: ""}\"",
         )
         buildConfigField(
             "boolean", "USE_LOCAL_BACKEND",
-            localProperties.getProperty("USE_LOCAL_BACKEND", "false"),
+            envOrLocal("USE_LOCAL_BACKEND") ?: "false",
         )
         buildConfigField(
             "String", "GOOGLE_WEB_CLIENT_ID",
-            "\"${localProperties.getProperty("GOOGLE_WEB_CLIENT_ID", "")}\"",
+            "\"${envOrLocal("GOOGLE_WEB_CLIENT_ID") ?: ""}\"",
         )
     }
 
@@ -121,6 +157,26 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+}
+
+play {
+    if (playCredentialsFile == null) {
+        // No credentials means local dev or a PR build. GPP has to be switched
+        // off entirely rather than just left unconfigured: its AUTO versionCode
+        // resolution hooks into assembleRelease and would fail the build trying
+        // to reach Play for a version it can't ask about.
+        enabled.set(false)
+    } else {
+        serviceAccountCredentials.set(playCredentialsFile)
+        // Play owns versionCode: AUTO reads the highest already uploaded and
+        // increments from it. Never derive it from CI run numbers — those reset
+        // when a workflow is renamed, and Play's rejection of a reused
+        // versionCode is permanent for that number.
+        resolutionStrategy.set(ResolutionStrategy.AUTO)
+        defaultToAppBundles.set(true)
+        track.set(playTrack)
+        releaseStatus.set(ReleaseStatus.COMPLETED)
     }
 }
 
