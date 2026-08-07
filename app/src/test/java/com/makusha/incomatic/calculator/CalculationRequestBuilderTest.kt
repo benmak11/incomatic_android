@@ -4,8 +4,20 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertNotNull
 import org.junit.Test
+import com.makusha.incomatic.AppConfig
 
 class CalculationRequestBuilderTest {
+
+    @Test
+    fun `request carries the resolved tax year, not a hardcoded one`() {
+        try {
+            AppConfig.cacheTaxYear(2027)
+            val request = CalculatorState(incomeType = IncomeType.SALARY, salary = "85000").toCalculateRequest()
+            assertEquals(2027, request.taxYear)
+        } finally {
+            AppConfig.cacheTaxYear(AppConfig.FALLBACK_TAX_YEAR)
+        }
+    }
 
     @Test
     fun `salary income type populates salary and leaves hourly null`() {

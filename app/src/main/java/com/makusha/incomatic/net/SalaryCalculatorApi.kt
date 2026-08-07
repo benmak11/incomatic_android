@@ -26,6 +26,9 @@ interface RawSalaryCalculatorApi {
     @GET("v1/countries/US/states")
     suspend fun getUsStates(): ResponseBody
 
+    @GET("v1/tax-years")
+    suspend fun getTaxYears(@Query("country") country: String): ResponseBody
+
     @POST("v1/auth/google")
     suspend fun signInWithGoogle(@Body request: RequestBody): ResponseBody
 

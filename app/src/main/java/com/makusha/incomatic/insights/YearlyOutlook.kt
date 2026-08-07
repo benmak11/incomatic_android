@@ -67,7 +67,7 @@ fun YearlyOutlook(form: CalculatorState, result: CalculateResponse, grants: List
 
     val baseAnnual = (result.baseSalaryPerCadence ?: 0.0) * form.payFrequency.cadence.periodsPerYear
     val bonusAmount = form.bonus.toDoubleOrNull() ?: 0.0
-    val bonusStartYear = VestMath.parseDate(form.bonusDate)?.year ?: AppConfig.TAX_YEAR
+    val bonusStartYear = VestMath.parseDate(form.bonusDate)?.year ?: AppConfig.taxYear
 
     fun bonusInYear(year: Int): Double {
         if (bonusAmount <= 0) return 0.0
@@ -76,9 +76,9 @@ fun YearlyOutlook(form: CalculatorState, result: CalculateResponse, grants: List
     }
 
     fun rsuInYear(year: Int): Double =
-        if (year == AppConfig.TAX_YEAR) result.supplemental?.rsuGross ?: 0.0 else VestMath.value(year, grants)
+        if (year == AppConfig.taxYear) result.supplemental?.rsuGross ?: 0.0 else VestMath.value(year, grants)
 
-    val firstYear = AppConfig.TAX_YEAR
+    val firstYear = AppConfig.taxYear
     val lastYear = maxOf(
         VestMath.finalVestYear(grants) ?: firstYear,
         if (bonusAmount > 0) bonusStartYear else firstYear,
@@ -152,7 +152,7 @@ fun YearlyOutlook(form: CalculatorState, result: CalculateResponse, grants: List
 @Composable
 private fun YearRow(entry: YearEntry, maxTotal: Double) {
     val colors = incColors()
-    val isCurrent = entry.year == AppConfig.TAX_YEAR
+    val isCurrent = entry.year == AppConfig.taxYear
     Column(modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(

@@ -160,7 +160,7 @@ private fun VestingSummaryRow(equity: EquityViewModel, grants: List<com.makusha.
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "RSUs vesting in ${AppConfig.TAX_YEAR} · ~${formatMoney(equity.vestingThisYear, cents = false)}",
+                    "RSUs vesting in ${AppConfig.taxYear} · ~${formatMoney(equity.vestingThisYear, cents = false)}",
                     style = IncType.body.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
                     color = if (dimmed) colors.textMute else colors.text,
                 )

@@ -28,7 +28,7 @@ class EquityViewModel : ViewModel() {
 
     /** Grant-derived RSU value vesting in the current tax year. */
     val vestingThisYear: Double
-        get() = VestMath.value(AppConfig.TAX_YEAR, grants.value)
+        get() = VestMath.value(AppConfig.taxYear, grants.value)
 
     /** Distinct tickers/companies for the Equity card subline ("AAPL, RDDT"). */
     val tickerSummary: String
