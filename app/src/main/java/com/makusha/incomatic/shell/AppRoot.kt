@@ -20,6 +20,7 @@ import com.makusha.incomatic.design.incColors
 import com.makusha.incomatic.equity.EquityViewModel
 import com.makusha.incomatic.history.HistoryViewModel
 import com.makusha.incomatic.nav.MainTab
+import com.makusha.incomatic.net.UpgradeGate
 import com.makusha.incomatic.onboarding.OnboardingFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -45,6 +46,14 @@ fun AppRoot() {
     val accountManager: AccountManager = viewModel()
     val historyViewModel: HistoryViewModel = viewModel()
     val colors = incColors()
+
+    // Wins over every other branch, including onboarding: once the backend has
+    // refused this build, nothing below here can complete a request.
+    val upgradeRequirement by UpgradeGate.requirement.collectAsStateWithLifecycle()
+    upgradeRequirement?.let {
+        UpgradeRequiredScreen(requirement = it)
+        return
+    }
 
     when {
         hasCompletedOnboarding == null -> Box(modifier = Modifier.fillMaxSize().background(colors.bg)) {}
